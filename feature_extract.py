@@ -128,8 +128,11 @@ def getTotalChar(content1,content2):
             return len(len1)
         else : return len(len2)
     except Exception,e: return 0
-def isError(content1,content2):
-    pass
+
+#统计HTML标签数量
+def getHtmlLabels(content1,content2):
+    labels=['<title','<a','<img','<href','<span','<div','<font','<input',r'<h\d',]
+    
 
 '''
 s1,s2=getPageContent('6a4effb7f61acf2f4cc1932fb313ca03')
