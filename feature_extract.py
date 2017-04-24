@@ -3,31 +3,32 @@ import sys
 import re
 import chardet
 import urllib
+import jieba
+import jieba.analyse
+from HTMLParser import HTMLParser
+
 
 reload(sys)  
 sys.setdefaultencoding("utf-8") 
 
 #索引文件位置
 index=open('../file_list.txt','r')
+pages=index.readlines()
 
 #获取网页URL，标签等信息
-#每调用一次读取下一行
-def getPageInfo():
-    page = index.readline()
+#输入参数为行数
+def getPageInfo(num):
+    page = pages[num]
     page_info = page.split(',')
     label = page_info[1]
     file_name = page_info[2]
     url = page_info[3]
     return label,file_name,url
 
-
-
-
-
 #通过文件名从file1目录中获取网页文本内容
 def getPageContent(file_name):
 
-    with open('../file1/'+file_name,'r') as html:
+    with open('../file/'+file_name,'r') as html:
         content = html.read()
         char=chardet.detect(content)
         content=content.decode(char['encoding'],'ignore')
@@ -92,8 +93,8 @@ def extractRequestRealm(content,url):
     return [len(outside_requests)-inside,len(inside_requests)+inside]
 
 
-#提取钓鱼网页关键字
-def getKeywords(content):
+#从网页中查找十分存在可疑关键字
+def findKeywords(content):
     words = [u'支付',u'账号',u'银行',u'金融',u'信息',u'登录',u'订单',u'交易',u'付款',u'客服',u'输入',u'手机',u'积分',
     u'查询',u'订购',u'缴费',u'查询',u'信用卡',u'业务',u'客户',u'金额',u'特惠',u'优惠',u'姓名',u'身份证',u'规则',u'密码',
     u'账号','ID',u'商品',]
@@ -116,7 +117,16 @@ def getTotalChar(content):
     except: print 'Count Chinese character error'
     return len(count)        
 
-
+#获取网页中的中文关键字
+def getKeywords(content,topK=3):
+    re_words = re.compile(u"[\u4e00-\u9fa5]")
+    
+    count=[]
+    try:
+        char = re.findall(re_words, unicode(content))
+    except: print 'Count Chinese character error'
+    tags = jieba.analyse.extract_tags("".join(char), topK)
+    return tags
 
 #统计HTML标签数量
 def getHtmlLabels(content):
@@ -129,7 +139,10 @@ def getHtmlLabels(content):
 
 '''
 s1=getPageContent('f51fb0c9073196c8426d318387b2bd59')
-print getKeywords(s1)
+key =  getChar(s1,8)
+for i in key:
+    print i
+'''
 '''
 for x in xrange(1,100):
     try:
@@ -143,3 +156,4 @@ for x in xrange(1,100):
         print getHtmlLabels(s1)
 
     except: pass  
+'''
