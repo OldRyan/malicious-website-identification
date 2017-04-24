@@ -35,11 +35,32 @@ def sort_by_count(d):
     d = collections.OrderedDict(sorted(d.items(), key = lambda t: -t[1]))
     return d
 
+#提取网页中文
+def getTotalChar(content1,content2):
+    re_words = re.compile(u"[\u4e00-\u9fa5]")
+    try:
+        len1='0'
+        len2='0'
+        try:
+            len1 = re.findall(re_words, unicode(content1))
+        except:pass
+        try:
+            len2 = re.findall(re_words, unicode(content2))
+        except Exception,e: pass
+
+
+
+        if len(len1)>len(len2):
+            return len(len1)
+        else : return len(len2)
+    except Exception,e: return 0
+
 if __name__ == '__main__':
     file_name = "test.txt"
 
     dword = count_word(file_name)
     dword = sort_by_count(dword)
-    
+    counter=3
     for key,value in dword.items():
+        
         print key + ":%d" % value

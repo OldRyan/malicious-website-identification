@@ -1,6 +1,8 @@
 #coding=utf-8
 import sys  
 import re
+import chardet
+
 from bs4 import BeautifulSoup
 import urllib
 
@@ -26,6 +28,13 @@ def getPageInfo():
 #由于解码问题，返回两种网页文本，提高解码成功的概率
 def getPageContent(file_name):
 
+    with open('../file1/'+file_name,'r') as html:
+        content = html.read()
+        char=chardet.detect(content)
+        content=content.decode(char['encoding'],'ignore')
+
+    return content
+    '''
     soup = BeautifulSoup(open("../file1/"+file_name), "html.parser")
     soup=str(soup)
 
@@ -50,16 +59,9 @@ def getPageContent(file_name):
 
     re_words = re.compile(u"[\u4e00-\u9fa5]+")
 
-    ''' 
-    s=unicode(soup)
-    len_soup = re.findall(re_words, s)
-    s=unicode(content)
-    len_content =  re.findall(re_words, content)
-    for s in  len_soup:
-        print s
-    '''
-    return content,soup
 
+    return content,soup
+    '''
 
 #提取请求域特征，
 #返回跨域请求数和域内请求数
@@ -131,8 +133,16 @@ def getTotalChar(content1,content2):
 
 #统计HTML标签数量
 def getHtmlLabels(content1,content2):
-    labels=['<title','<a','<img','<href','<span','<div','<font','<input',r'<h\d',]
-    
+    countList=[]
+    labels=['<title','<link','<a','<img','<href','<span','<div','<font','<input',r'<h\d','<li',]
+    for x in labels:
+        count1=len(re.findall(x,content1))
+        count2=len(re.findall(x,content2))
+        if count1>=count2:
+            countList.append(count1)
+        else:
+            countList.append(count2)
+    return countList
 
 '''
 s1,s2=getPageContent('6a4effb7f61acf2f4cc1932fb313ca03')
@@ -144,8 +154,8 @@ for x in xrange(1,100):
         passlabel,file_name,url=getPageInfo()
         print file_name
 
-        s1,s2=getPageContent(file_name)
+        s2=getPageContent(file_name)
         #print extractRequestRealm(s1,url)
-        print getTotalChar(s1,s2)
+        print s2
 
     except: pass  
