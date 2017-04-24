@@ -7,18 +7,21 @@ import jieba
 import jieba.analyse
 from HTMLParser import HTMLParser
 
-
+#设置系统编码为UTF-8
 reload(sys)  
 sys.setdefaultencoding("utf-8") 
 
-#索引文件位置
+#打开索引文件
 index=open('../file_list.txt','r')
+#按行读取整个文件
 pages=index.readlines()
 
 #获取网页URL，标签等信息
 #输入参数为行数
 def getPageInfo(num):
+    #获得参数对应行
     page = pages[num]
+    #分割字符串
     page_info = page.split(',')
     label = page_info[1]
     file_name = page_info[2]
@@ -29,131 +32,107 @@ def getPageInfo(num):
 def getPageContent(file_name):
 
     with open('../file/'+file_name,'r') as html:
+        #读取网页源代码
         content = html.read()
+        #侦测源代码编码
         char=chardet.detect(content)
+        #统一解码成utf8
         content=content.decode(char['encoding'],'ignore')
 
-        #解码ncr
+        #解码NCR
         content=re.sub(r'\&\#\d{4,6}\;', lambda m: HTMLParser().unescape(m.group(0)), content, 0)
 
     return content
-    '''
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(open("../file1/"+file_name), "html.parser")
-    soup=str(soup)
 
-    
-    with open('../file1/'+file_name,'r') as html:
-        
-        content = html.read()
-
-        #gbk编码转换
-        if re.search(r'charset=gbk',content,re.I):
-            content=content.decode('gbk','ignore')
-
-        elif re.search(r'charset=gb2312',content,re.I):
-            content=content.decode('gb2312','ignore')
-
-
-        #print soup
-        #解码ncr
-        content=re.sub(r'\&\#\d{4,6}\;', lambda m: HTMLParser().unescape(m.group(0)), content, 0)
-        
-
-
-    re_words = re.compile(u"[\u4e00-\u9fa5]+")
-
-
-    return content,soup
-    '''
 
 #提取请求域特征，
 #返回跨域请求数和域内请求数
 def extractRequestRealm(content,url):
     #域外资源请求
-    #第一种形式:http://开头
+    #第一种形式:http://开头可能是域外请求
     re_outside_realm1 = re.compile(r'[\'|\"]http[s]*\:\/\/[\-|\d|\w|\/|\.]+[\'|\"]')
-    #第二种形式://开头
+    #第二种形式://开头可能是域外请求
     re_outside_realm2 = re.compile(r'[\'|\"][\/]{2}[\d|\w||\/|\-]+\.\w{1,5}')
     outside_requests = re.findall(re_outside_realm1,content)
+    #合并前两种形式
     outside_requests.extend(re.findall(re_outside_realm2,content))
-    #从url中提取域名
-    
+    #从url中提取网站域名
     domain=re.search(r'[www.]*[\d|\w|\.|\-]+\/',url).group(0).split('.')[-2]
-    #去除域内请求
+    #在第一种形式的请求中包含站点域名则是域内请求
+    #找出前两种形式中是域内请求的数量
     inside=0
     for x in outside_requests:
         if re.search(domain,x):
             inside=inside+1
     
-    #域内资源请求：
+    #以目录索引形式访问资源一定是域内请求
     re_inside_realm = re.compile(r'[\'|\"][\/]{0,1}[^\/][\w|\/|\-]+\.\w{1,5}')
     inside_requests = re.findall(re_inside_realm,content)
     #返回列表：[域外，域内]
     return [len(outside_requests)-inside,len(inside_requests)+inside]
 
+import pickle
+#读取钓鱼网站关键字列表（标签为p）
+with open('p_keyword.pick','rb') as p_keyword_pick:
+    p_keyword=pickle.load(p_keyword_pick)
 
-#从网页中查找十分存在可疑关键字
+#读取被黑网站关键字列表（标签为d）
+with open('d_keyword.pick','rb') as d_keyword_pick:
+    d_keyword=pickle.load(d_keyword_pick)
+
+#从网页中匹配可疑关键字
 def findKeywords(content):
-    words = [u'支付',u'账号',u'银行',u'金融',u'信息',u'登录',u'订单',u'交易',u'付款',u'客服',u'输入',u'手机',u'积分',
-    u'查询',u'订购',u'缴费',u'查询',u'信用卡',u'业务',u'客户',u'金额',u'特惠',u'优惠',u'姓名',u'身份证',u'规则',u'密码',
-    u'账号','ID',u'商品',]
+
     output=[]
-    word_index=0
-    for w in words:
+    #查找钓鱼网站关键字
+    for w in p_keyword:
         if re.search(w,content):
             output.append(1)
         else: output.append(0)
+    #查找被黑页面关键字
+    for w in d_keyword:
+        if re.search(w,content):
+            output.append(1)
+        else: output.append(0)    
     return output
 
 
 #统计网页中文字数
 def getTotalChar(content):
+    #所有汉字的unicode编码
     re_words = re.compile(u"[\u4e00-\u9fa5]")
     
     count=[]
     try:
+        #匹配出网页中的汉字
         count = re.findall(re_words, unicode(content))
     except: print 'Count Chinese character error'
+    #返回汉字的数量
     return len(count)        
 
 #获取网页中的中文关键字
 def getKeywords(content,topK=3):
     re_words = re.compile(u"[\u4e00-\u9fa5]")
     
-    count=[]
     try:
         char = re.findall(re_words, unicode(content))
-    except: print 'Count Chinese character error'
+    except: print 'Get Chinese character error'
+    #合并所有汉字后提取关键字，默认提取3个关键字
     tags = jieba.analyse.extract_tags("".join(char), topK)
     return tags
+
 
 #统计HTML标签数量
 def getHtmlLabels(content):
     countList=[]
-    labels=['<title','<link','<a','<img','<href','<span','<div','<font','<input',r'<h\d','<li',]
+    #常用html标签
+    labels=['<link','<a','<img','<href','<span','<div','<font','<input',r'<h\d','<li',]
     for x in labels:
         count=len(re.findall(x,content))
         countList.append(count)
     return countList
 
-'''
-s1=getPageContent('f51fb0c9073196c8426d318387b2bd59')
-key =  getChar(s1,8)
-for i in key:
-    print i
-'''
-'''
-for x in xrange(1,100):
-    try:
-        passlabel,file_name,url=getPageInfo()
-        print file_name
 
-        s1=getPageContent(file_name)
-        print extractRequestRealm(s1,url)
-        print getTotalChar(s1)
-        print getKeywords(s1)
-        print getHtmlLabels(s1)
+s1=getPageContent('002a7f505625284e3b24f4180c46bd92')
+print findKeywords(s1)
 
-    except: pass  
-'''
