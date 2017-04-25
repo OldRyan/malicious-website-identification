@@ -84,11 +84,11 @@ def extractRequestRealm(content,url):
 
 import pickle
 #读取钓鱼网站关键字列表（标签为p）
-with open('pick/p_keyword.pick','rb') as p_keyword_pick:
+with open('../pick/p_keyword.pick','rb') as p_keyword_pick:
     p_keyword=pickle.load(p_keyword_pick)
 
 #读取被黑网站关键字列表（标签为d）
-with open('pick/d_keyword.pick','rb') as d_keyword_pick:
+with open('../pick/d_keyword.pick','rb') as d_keyword_pick:
     d_keyword=pickle.load(d_keyword_pick)
 
 #从网页中匹配可疑关键字

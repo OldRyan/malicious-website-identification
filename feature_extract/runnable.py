@@ -76,8 +76,8 @@ for i in xrange(300):
 		labels.append([0,0,1])
 	else :print label,file_name
 
-with open('pick/train_images.pick','wb') as f1:
+with open('../pick/train_images.pick','wb') as f1:
 	pickle.dump(images,f1)
-with open('pick/train_labels.pick','wb') as f2:
+with open('../pick/train_labels.pick','wb') as f2:
 	pickle.dump(labels,f2)
 
