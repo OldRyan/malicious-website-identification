@@ -13,7 +13,7 @@ reload(sys)
 sys.setdefaultencoding("utf-8") 
 
 #打开索引文件
-index=open('../file_list.txt','r')
+index=open('../../file_list.txt','r')
 #按行读取整个文件
 pages=index.readlines()
 
@@ -32,7 +32,7 @@ def getPageInfo(num):
 #通过文件名从file1目录中获取网页文本内容
 def getPageContent(file_name):
 
-    with open('../file/'+file_name,'rb') as html:
+    with open('../../file/'+file_name,'rb') as html:
         #读取网页源代码
         content = html.read()
         #侦测源代码编码
@@ -50,7 +50,7 @@ def getPageContent(file_name):
 
 #使用BeautifulSoup解析网页
 def getPageContent_soup(file_name):
-    soup = BeautifulSoup(open("../file/"+file_name), "html.parser")
+    soup = BeautifulSoup(open("../../file/"+file_name), "html.parser")
     soup = str(soup)
     return soup
 

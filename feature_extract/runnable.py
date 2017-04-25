@@ -2,7 +2,7 @@
 from feature_extract import *
 images=[]
 labels=[]
-for i in xrange(300):
+for i in xrange(39999):
 	print i
 	image=[]
 	label,file_name,url = getPageInfo(i)
