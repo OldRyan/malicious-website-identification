@@ -75,9 +75,17 @@ for i in xrange(39999):
 	elif label=='d' : 
 		labels.append([0,0,1])
 	else :print label,file_name
+	if (i+1)%50 == 0 :
+		with open('../pick/train_images-'+str(i/50)+'.pick','wb') as f1:
+			pickle.dump(images,f1)
+		with open('../pick/train_labels-'+str(i/50)+'.pick','wb') as f2:
+			pickle.dump(labels,f2)
+		print 'Data Saved, i = '+str(i)
+		images=[]
+		labels=[]
 
-with open('../pick/train_images.pick','wb') as f1:
+with open('../pick/train_images.pick-n','wb') as f1:
 	pickle.dump(images,f1)
-with open('../pick/train_labels.pick','wb') as f2:
+with open('../pick/train_labels.pick-n','wb') as f2:
 	pickle.dump(labels,f2)
 
